@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Financial Calculator Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --surface-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --brand-primary: #10b981; /* Premium Emerald Accent similar to Stash */
+            --brand-hover: #059669;
+            --border-color: #e2e8f0;
+            --tab-inactive-bg: #f1f5f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--surface-card);
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.02);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Sleek Modern Header Navigation Tabs */
+        .tabs-header {
+            display: flex;
+            background: var(--tab-inactive-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 8px 8px 0 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.5);
+        }
+
+        .tab-btn.active {
+            color: var(--brand-primary);
+            background: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--surface-card);
+            margin-bottom: -1px;
+        }
+
+        /* Workspace Grid Layout */
+        .calculator-body {
+            padding: 40px;
+        }
+
+        .calc-panel {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+        }
+
+        .calc-panel.active {
+            display: grid;
+        }
+
+        @media (max-width: 768px) {
+            .calc-panel {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+            .calculator-body {
+                padding: 24px;
+            }
+            .tabs-header {
+                flex-direction: column;
+                padding: 8px;
+                gap: 4px;
+            }
+            .tab-btn {
+                border-radius: 8px;
+            }
+            .tab-btn.active {
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 0;
+                background: rgba(16, 185, 129, 0.1);
+            }
+        }
+
+        /* Form Styling Elements */
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 16px;
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-primary);
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            border-color: var(--brand-primary);
+            background: var(--surface-card);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+
+        /* Pad inputs that utilize prefixes/suffixes */
+        .has-prefix input { padding-left: 36px; }
+        .has-suffix input, .has-suffix select { padding-right: 44px; }
+
+        /* Premium Dynamic Results Display Section */
+        .results-column {
+            background: var(--bg-primary);
+            border-radius: 20px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .results-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .primary-metric {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--brand-primary);
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+
+        .breakdown-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .metric-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .metric-value {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tabs-header">
+        <button class="tab-btn active" onclick="switchTab(event, 'compound-calc')">Compound Interest</button>
+        <button class="tab-btn" onclick="switchTab(event, 'mortgage-calc')">Mortgage Loan</button>
+        <button class="tab-btn" onclick="switchTab(event, 'auto-calc')">Auto Loan</button>
+    </div>
+
+    <div class="calculator-body">
+        
+        <div id="compound-calc" class="calc-panel active">
+            <div class="inputs-column">
+                <div class="input-group">
+                    <label for="ci-principal">Initial Principal</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="ci-principal" value="10000" oninput="calculateCompoundInterest()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ci-monthly">Monthly Addition</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="ci-monthly" value="250" oninput="calculateCompoundInterest()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ci-rate">Estimated Annual Interest Rate</label>
+                    <div class="input-wrapper has-suffix">
+                        <input type="number" id="ci-rate" value="8" step="0.1" oninput="calculateCompoundInterest()">
+                        <span class="input-suffix">%</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ci-years">Time Horizon</label>
+                    <div class="input-wrapper has-suffix">
+                        <input type="number" id="ci-years" value="10" oninput="calculateCompoundInterest()">
+                        <span class="input-suffix">yrs</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ci-frequency">Compounding Interval</label>
+                    <div class="input-wrapper">
+                        <select id="ci-frequency" onchange="calculateCompoundInterest()">
+                            <option value="12" selected>Monthly</option>
+                            <option value="1">Annually</option>
+                            <option value="4">Quarterly</option>
+                            <option value="365">Daily</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-column">
+                <div class="results-title">Estimated Future Value</div>
+                <div class="primary-metric" id="ci-total-out">$0.00</div>
+                <div class="breakdown-divider"></div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Principal Invested</span>
+                    <span class="metric-value" id="ci-principal-out">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Total Compounded Earnings</span>
+                    <span class="metric-value" id="ci-interest-out">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mortgage-calc" class="calc-panel">
+            <div class="inputs-column">
+                <div class="input-group">
+                    <label for="mg-homevalue">Home Purchase Price</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="mg-homevalue" value="400000" oninput="calculateMortgage()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="mg-downpayment">Down Payment Amount</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="mg-downpayment" value="80000" oninput="calculateMortgage()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="mg-rate">Annual Fixed Rate</label>
+                    <div class="input-wrapper has-suffix">
+                        <input type="number" id="mg-rate" value="6.5" step="0.01" oninput="calculateMortgage()">
+                        <span class="input-suffix">%</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="mg-term">Loan Term Length</label>
+                    <div class="input-wrapper">
+                        <select id="mg-term" onchange="calculateMortgage()">
+                            <option value="30" selected>30-Year Fixed</option>
+                            <option value="20">20-Year Fixed</option>
+                            <option value="15">15-Year Fixed</option>
+                            <option value="10">10-Year Fixed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-column">
+                <div class="results-title">Monthly P&I Payment</div>
+                <div class="primary-metric" id="mg-payment-out">$0.00</div>
+                <div class="breakdown-divider"></div>
+                <div class="metric-row">
+                    <span class="metric-label">Net Loan Financed</span>
+                    <span class="metric-value" id="mg-loan-out">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Cumulative Base Principal</span>
+                    <span class="metric-value" id="mg-principal-out">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Cumulative Interest Paid</span>
+                    <span class="metric-value" id="mg-interest-out">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="auto-calc" class="calc-panel">
+            <div class="inputs-column">
+                <div class="input-group">
+                    <label for="auto-price">Vehicle Target Purchase Price</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="auto-price" value="35000" oninput="calculateAutoLoan()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="auto-down">Down Payment / Trade-In Value</label>
+                    <div class="input-wrapper has-prefix">
+                        <span class="input-prefix">$</span>
+                        <input type="number" id="auto-down" value="5000" oninput="calculateAutoLoan()">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="auto-rate">Annual Financing APR</label>
+                    <div class="input-wrapper has-suffix">
+                        <input type="number" id="auto-rate" value="5.25" step="0.01" oninput="calculateAutoLoan()">
+                        <span class="input-suffix">%</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="auto-months">Loan Duration Period</label>
+                    <div class="input-wrapper has-suffix">
+                        <input type="number" id="auto-months" value="60" oninput="calculateAutoLoan()">
+                        <span class="input-suffix">mos</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results-column">
+                <div class="results-title">Monthly Auto Payment</div>
+                <div class="primary-metric" id="auto-payment-out">$0.00</div>
+                <div class="breakdown-divider"></div>
+                <div class="metric-row">
+                    <span class="metric-label">Net Financed Principle</span>
+                    <span class="metric-value" id="auto-loan-out">$0.00</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Lifetime Financing Cost</span>
+                    <span class="metric-value" id="auto-interest-out">$0.00</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Tab Controller Switch Mechanism
+    function switchTab(evt, panelId) {
+        const panels = document.querySelectorAll('.calc-panel');
+        const buttons = document.querySelectorAll('.tab-btn');
+        
+        panels.forEach(panel => panel.classList.remove('active'));
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(panelId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // Currency Formatting Helper Function
+    function formatCurrency(num) {
+        if (isNaN(num) || num === Infinity) return "$0.00";
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    }
+
+    // Mathematical Calculation Engine For Compound Interest
+    function calculateCompoundInterest() {
+        const P = parseFloat(document.getElementById('ci-principal').value) || 0;
+        const PMT = parseFloat(document.getElementById('ci-monthly').value) || 0;
+        const r = (parseFloat(document.getElementById('ci-rate').value) || 0) / 100;
+        const t = parseFloat(document.getElementById('ci-years').value) || 0;
+        const n = parseInt(document.getElementById('ci-frequency').value) || 12;
+
+        // Accurate compound formula accounting for initial principal and standard recurring additions
+        const principalCompound = P * Math.pow((1 + r / n), (n * t));
+        
+        let annuityCompound = 0;
+        if (r > 0) {
+            annuityCompound = PMT * ((Math.pow((1 + r / n), (n * t)) - 1) / (r / n)) * (1 + (r / n) * 0); 
+            // Calculated as standard ordinary annuity (end-of-month deposits)
+        } else {
+            annuityCompound = PMT * 12 * t;
+        }
+
+        const futureValue = principalCompound + annuityCompound;
+        const totalContributions = P + (PMT * 12 * t);
+        const totalInterest = Math.max(0, futureValue - totalContributions);
+
+        document.getElementById('ci-total-out').innerText = formatCurrency(futureValue);
+        document.getElementById('ci-principal-out').innerText = formatCurrency(totalContributions);
+        document.getElementById('ci-interest-out').innerText = formatCurrency(totalInterest);
+    }
+
+    // Amortization Math Logic for Fixed Rate Mortgages
+    function calculateMortgage() {
+        const price = parseFloat(document.getElementById('mg-homevalue').value) || 0;
+        const down = parseFloat(document.getElementById('mg-downpayment').value) || 0;
+        const annualRate = parseFloat(document.getElementById('mg-rate').value) || 0;
+        const years = parseInt(document.getElementById('mg-term').value) || 30;
+
+        const principal = Math.max(0, price - down);
+        const monthlyRate = (annualRate / 100) / 12;
+        const totalPayments = years * 12;
+
+        let monthlyPayment = 0;
+        if (monthlyRate > 0) {
+            monthlyPayment = (principal * monthlyRate * Math.pow(1 + monthlyRate, totalPayments)) / (Math.pow(1 + monthlyRate, totalPayments) - 1);
+        } else {
+            monthlyPayment = principal / totalPayments;
+        }
+
+        const lifetimeCost = monthlyPayment * totalPayments;
+        const totalInterest = Math.max(0, lifetimeCost - principal);
+
+        document.getElementById('mg-payment-out').innerText = formatCurrency(monthlyPayment);
+        document.getElementById('mg-loan-out').innerText = formatCurrency(principal);
+        document.getElementById('mg-principal-out').innerText = formatCurrency(principal);
+        document.getElementById('mg-interest-out').innerText = formatCurrency(totalInterest);
+    }
+
+    // Installment Compounding Engine for Auto Financing
+    function calculateAutoLoan() {
+        const price = parseFloat(document.getElementById('auto-price').value) || 0;
+        const down = parseFloat(document.getElementById('auto-down').value) || 0;
+        const apr = parseFloat(document.getElementById('auto-rate').value) || 0;
+        const months = parseInt(document.getElementById('auto-months').value) || 0;
+
+        const principal = Math.max(0, price - down);
+        const monthlyRate = (apr / 100) / 12;
+
+        let monthlyPayment = 0;
+        if (months > 0) {
+            if (monthlyRate > 0) {
+                monthlyPayment = (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1);
+            } else {
+                monthlyPayment = principal / months;
+            }
+        }
+
+        const lifetimeCost = monthlyPayment * months;
+        const totalInterest = Math.max(0, lifetimeCost - principal);
+
+        document.getElementById('auto-payment-out').innerText = formatCurrency(monthlyPayment);
+        document.getElementById('auto-loan-out').innerText = formatCurrency(principal);
+        document.getElementById('auto-interest-out').innerText = formatCurrency(totalInterest);
+    }
+
+    // Initialize all metrics on initial page load
+    document.addEventListener("DOMContentLoaded", function() {
+        calculateCompoundInterest();
+        calculateMortgage();
+        calculateAutoLoan();
+    });
+</script>
+
+</body>
+</html>
